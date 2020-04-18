@@ -149,10 +149,11 @@ void loop(){
 // IF USER HAS INSERTED HANDS 
   } else if (inches <= distanceThreshold) {
 	*portD |= B01000000; //digitalWrite(examplePin, HIGH); If under threshold, turn LED on
-	 lcd.clear();
-	 printLCD(calcTemp(), timeRemaining); // DISPLAY TEMP AND TIME REMAINING
-     digitalWrite(3, LOW);
-     digitalWrite(6, HIGH);
+	lcd.clear();
+	printLCD(calcTemp(), timeRemaining); // DISPLAY TEMP AND TIME REMAINING
+     	digitalWrite(3, LOW);
+     	digitalWrite(6, HIGH);
+	  
 	 // OPEN VALVE WHEN FIRST INSERTED
 	 if (timeRemaining == 30){
 		 openValve();
@@ -163,13 +164,13 @@ void loop(){
 	 
 	 // IF USER HAS WASHED HANDS FOR 30 SEC
 	  if(timeRemaining <= -1){ 
-		  lcd.clear();
-		  lcd.print("ALL DONE");
-          digitalWrite(3, HIGH); // LIGHT GREEN LED
-          digitalWrite(6, LOW); // TURN OFF RED LED
-		  closeValve(); // STOP HAND WASHING SYSTEM
-          delay(5000); //DELAY 5 SEC
-          timeRemaining = 30;
+		lcd.clear();
+		lcd.print("ALL DONE");
+          	digitalWrite(3, HIGH); // LIGHT GREEN LED
+          	digitalWrite(6, LOW); // TURN OFF RED LED
+		closeValve(); // STOP HAND WASHING SYSTEM
+          	delay(5000); //DELAY 5 SEC
+          	timeRemaining = 30; // RESTART COUNTDOWN AND SYSTEM
 	  }
   }
 

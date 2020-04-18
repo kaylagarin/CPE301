@@ -1,6 +1,7 @@
-// Include LCD Library
+// LCD LIBRARY
 #include <LiquidCrystal.h>
-//Define macros for LCD pins
+
+//DEFINE MACROS FOR LCD PINS
 #define LCD_RS 13
 #define LCD_E 12
 #define LCD_DB4 11
@@ -8,19 +9,19 @@
 #define LCD_DB6 9
 #define LCD_DB7 8
 
-//DC Motor/Valve
+//DC MOTOR/VALVE
 #define MOTOR_BIT_FWD 4
 #define MOTOR_BIT_REV 5
 
-//Initilize LCD
+//INITIALIZE LCD
 LiquidCrystal lcd(LCD_RS, LCD_E, LCD_DB4, LCD_DB5, LCD_DB6, LCD_DB7);
 
-//port D registers
+//PORT D REGISTERS
 volatile unsigned char* portD=(unsigned char*) 0x2B;
 volatile unsigned char* ddrD=(unsigned char*) 0x2A;
 volatile unsigned char* pinD=(unsigned char*) 0x29;
 
-//motor control registers
+//MOTOR CONTORL REGISTERS
 volatile unsigned char* motorPort=portD;
 volatile unsigned char* motorDDR=ddrD;
 volatile unsigned char* motorPIN=pinD;
@@ -29,6 +30,7 @@ int inches = 0;
 int cm = 0;
 int distanceThreshold = 5;
 int examplePin = 8;
+int timeRemaining = 30;
 
 /*
 Name: readUltrasonicDistance
@@ -38,8 +40,7 @@ Function:
 	The function sends a signal through triggerPin and reports the 
 	time it takes to get the signal back over echoPin.
 */
-long readUltrasonicDistance()
-{
+long readUltrasonicDistance(){ // NOTE: ARE ARGUMENTS STILL NEEDED? -KG
   //int triggerPin = 7;
   //int echoPin = 7;
   *ddrD |= B10000000; // pinMode(triggerPin, OUTPUT); Clear the trigger
@@ -67,6 +68,7 @@ long readUltrasonicDistance()
  	* ends to +5V and ground
  	* wiper to LCD VO
 */
+
 /*
 Name: printLCD
 Arugments: 
@@ -82,6 +84,7 @@ void printLCD(int displayTemp,int displaySec){
   printTemp(displayTemp);
   printSec(displaySec);
 }
+
 /*
 Name: printTemp
 Arguments:
@@ -99,18 +102,15 @@ void printTemp(int displayTemp){
 
 /* Name: calcTemp
 Arguments:none
-Function:	
-	reads from temperature sensor and converts
-    value to fahrenheit
+Function: reads from temperature sensor and converts value to fahrenheit
 */
 
 float calcTemp(){
-   // TEMPERATURE CALC
-  float tmpReading = analogRead(A0);
+  float tmpReading = analogRead(A0); // read from analog pin A0
   // need following line? or does it read in volts already?
   float volts = (tmpReading / 965.0) * 5;
-  float celsius = (volts - .5) * 100;// VOLTS TO C
-  float fahrenheit = (celsius * 9 / 5 + 32); //C TO 
+  float celsius = (volts - .5) * 100;// VOLTS TO CELSIUS
+  float fahrenheit = (celsius * 9 / 5 + 32); // CELSUIS TO FAHRENHEIT
   return fahrenheit;
 }
 
@@ -128,7 +128,7 @@ void printSec(int displaySec){
  lcd.print(displaySec);
 }
 
-//Valve control
+// VALVE CONTROL
 void openValve(){
   *motorPort|=(1<<MOTOR_BIT_FWD); //set forward motor bit to 1
   delay(60); //run motor for a time
@@ -141,30 +141,38 @@ void closeValve(){
   *motorPort&=~(1<<MOTOR_BIT_REV); //reset reverse motor bit to 0
 }
 
-void setup()
-{
+void setup(){
   Serial.begin(9600);
   //pinMode(examplePin, OUTPUT);
-  // temp sensor setup
-  pinMode(A0, INPUT);
-  // set up the LCD # of cols and # of rows:
-  lcd.begin(16, 2);
-  
+  pinMode(A0, INPUT); // TERMP SENSOR SETUP
+  lcd.begin(16, 2);// set up the LCD # of cols and # of rows
   *motorDDR|=(1<<MOTOR_BIT_FWD)|(1<<MOTOR_BIT_REV);
 }
 
-void loop()
-{ 
+void loop(){ 
   // measure the ping time in cm
   cm = 0.01723 * readUltrasonicDistance();
-  
-  // convert to inches by dividing by 2.54
-  inches = (cm / 2.54);
+  inches = (cm / 2.54); // cm to inches conversion
   
   if (inches > distanceThreshold) {
     *portD &= B10111111; //digitalWrite(examplePin, LOW); Turn LED off if over threshold
+    // DISPLAY INSERT HANDS MESSAGE
+	lcd.clear();
+	lcd.setCursor(0,0);
+	lcd.print("INSERT HANDS");
+	  
   } else if (inches <= distanceThreshold) {
-    *portD |= B01000000; //digitalWrite(examplePin, HIGH); If under threshold, turn LED on
+	*portD |= B01000000; //digitalWrite(examplePin, HIGH); If under threshold, turn LED on
+	 lcd.clear();
+	 printLCD(calcTemp(), timeRemaining); 
+	 delay(1000);
+	 timeRemaining-=1; 
+	 
+	 // IF USER HAS WASHED HANDS FOR 30 SEC
+	  if(timeRemaining == -1){
+		  lcd.clear();
+		  lcd.print("ALL DONE");
+	  }
   }
   printLCD(calcTemp(), inches);
   

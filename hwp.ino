@@ -95,17 +95,14 @@ Function:
 */
   
 void printTemp(int displayTemp){
+// Function: print water temp to first row of LCD
  lcd.setCursor(0 ,0);
  lcd.print("Water Temp:");
  lcd.print(displayTemp);
 }
 
-/* Name: calcTemp
-Arguments:none
-Function: reads from temperature sensor and converts value to fahrenheit
-*/
-
 float calcTemp(){
+// Function: reads from termperature sensor and converts value to fahrenheit
   float tmpReading = analogRead(A0); // read from analog pin A0
   // need following line? or does it read in volts already?
   float volts = (tmpReading / 965.0) * 5;
@@ -114,15 +111,9 @@ float calcTemp(){
   return fahrenheit;
 }
 
-/*
-Name: printSec
-Arugments: 
-	displaySec (int)
-Function:
-	Prints to second row of LCD:
-    Seconds Left:[displaySec]
-*/
+
 void printSec(int displaySec){
+// function: print seconds left to second row of LCD
  lcd.setCursor(0,1);
  lcd.print("Seconds Left:");
  lcd.print(displaySec);
@@ -154,6 +145,7 @@ void loop(){
   cm = 0.01723 * readUltrasonicDistance();
   inches = (cm / 2.54); // cm to inches conversion
   
+// IF USER IS NOT WITHIN DISTANCE THRESHOLD
   if (inches > distanceThreshold) {
     *portD &= B10111111; //digitalWrite(examplePin, LOW); Turn LED off if over threshold
     // DISPLAY INSERT HANDS MESSAGE
@@ -161,23 +153,26 @@ void loop(){
 	lcd.setCursor(0,0);
 	lcd.print("INSERT HANDS");
 	  
+// IF USER HAS INSERTED HANDS 
   } else if (inches <= distanceThreshold) {
 	*portD |= B01000000; //digitalWrite(examplePin, HIGH); If under threshold, turn LED on
 	 lcd.clear();
-	 printLCD(calcTemp(), timeRemaining); 
-	 delay(1000);
-	 timeRemaining-=1; 
+	 printLCD(calcTemp(), timeRemaining); // DISPLAY TEMP AND TIME REMAINING
+	 
+	 // OPEN VALVE WHEN FIRST INSERTED
+	 if (timeRemaining == 30){
+		 openValve();
+	 }
+	  
+	 delay(1000); // DELAY FOR 1 SEC
+	 timeRemaining--; // DECREMENT COUNTDOWN BY 1 SEC
 	 
 	 // IF USER HAS WASHED HANDS FOR 30 SEC
-	  if(timeRemaining == -1){
+	  if(timeRemaining == -1){ 
 		  lcd.clear();
-		  lcd.print("ALL DONE");
+		  lcd.print("ALL DONE"); 
+		  closeValve(); // STOP HAND WASHING SYSTEM
 	  }
   }
-  printLCD(calcTemp(), inches);
-  
-  openValve();
-  delay(1000);
-  closeValve();
-  delay(1000);
+
 }

@@ -84,15 +84,6 @@ void printLCD(int displayTemp,int displaySec){
   printTemp(displayTemp);
   printSec(displaySec);
 }
-
-/*
-Name: printTemp
-Arguments:
-	displayTemp (int)
-Function:
-	Prints to first row of LCD:
-    Water Temp:[DisplayTemp]
-*/
   
 void printTemp(int displayTemp){
 // Function: print water temp to first row of LCD
@@ -110,7 +101,6 @@ float calcTemp(){
   float fahrenheit = (celsius * 9 / 5 + 32); // CELSUIS TO FAHRENHEIT
   return fahrenheit;
 }
-
 
 void printSec(int displaySec){
 // function: print seconds left to second row of LCD
@@ -132,6 +122,7 @@ void closeValve(){
   *motorPort&=~(1<<MOTOR_BIT_REV); //reset reverse motor bit to 0
 }
 
+/*********************** MAIN CODE **********************/
 void setup(){
   Serial.begin(9600);
   //pinMode(examplePin, OUTPUT);
@@ -168,7 +159,7 @@ void loop(){
 	 timeRemaining--; // DECREMENT COUNTDOWN BY 1 SEC
 	 
 	 // IF USER HAS WASHED HANDS FOR 30 SEC
-	  if(timeRemaining == -1){ 
+	  if(timeRemaining <= -1){ 
 		  lcd.clear();
 		  lcd.print("ALL DONE"); 
 		  closeValve(); // STOP HAND WASHING SYSTEM

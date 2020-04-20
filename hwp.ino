@@ -145,6 +145,12 @@ void loop(){
 	lcd.clear();
 	lcd.setCursor(0,0);
 	lcd.print("INSERT HANDS");
+	
+	// BLINK WARNING LIGHT (not working on tinkercad -- unsure why)
+	digitalWrite(6, HIGH);
+	delay(500);
+	digitalWrite(6, LOW);
+	
 	  
 // IF USER HAS INSERTED HANDS 
   } else if (inches <= distanceThreshold) {

@@ -69,17 +69,9 @@ long readUltrasonicDistance(){ // NOTE: ARE ARGUMENTS STILL NEEDED? -KG
  	* wiper to LCD VO
 */
 
-/*
-Name: printLCD
-Arugments: 
-	displayTemp (int)
-	displaySec (int)
-Function:
-	Prints to LCD in following format:
-    Water Temp:[DisplayTemp]
-    Seconds Left:[DisplaySec]
-*/
+
 void printLCD(int displayTemp,int displaySec){
+// Function: print water temp and seconds left
   lcd.clear();
   printTemp(displayTemp);
   printSec(displaySec);
@@ -122,14 +114,14 @@ void closeValve(){
   *motorPort&=~(1<<MOTOR_BIT_REV); //reset reverse motor bit to 0
 }
 
+
 /*********************** MAIN CODE **********************/
 void setup(){
   Serial.begin(9600);
-  //pinMode(examplePin, OUTPUT);
   pinMode(3, OUTPUT); // GREEN LED SETUP
   pinMode(6, OUTPUT); // RED LED SETUP
   pinMode(A0, INPUT); // TEMP SENSOR SETUP
-  lcd.begin(16, 2);// set up the LCD # of cols and # of rows
+  lcd.begin(16, 2);// LCD SETUP (COL, ROWS)
   *motorDDR|=(1<<MOTOR_BIT_FWD)|(1<<MOTOR_BIT_REV);
 }
 
@@ -140,26 +132,24 @@ void loop(){
   
 // IF USER IS NOT WITHIN DISTANCE THRESHOLD
   if (inches > distanceThreshold) {
-    *portD &= B10111111; //digitalWrite(examplePin, LOW); Turn LED off if over threshold
+    *portD &= B10111111; 
+    
     // DISPLAY INSERT HANDS MESSAGE
 	lcd.clear();
 	lcd.setCursor(0,0);
 	lcd.print("INSERT HANDS");
-	
-	// BLINK WARNING LIGHT (not working on tinkercad -- unsure why)
+    
 	digitalWrite(6, HIGH);
-	delay(500);
-	digitalWrite(6, LOW);
-	
+
+
 	  
 // IF USER HAS INSERTED HANDS 
   } else if (inches <= distanceThreshold) {
 	*portD |= B01000000; //digitalWrite(examplePin, HIGH); If under threshold, turn LED on
-	lcd.clear();
-	printLCD(calcTemp(), timeRemaining); // DISPLAY TEMP AND TIME REMAINING
-     	digitalWrite(3, LOW);
-     	digitalWrite(6, HIGH);
-	  
+	 lcd.clear();
+	 printLCD(calcTemp(), timeRemaining); // DISPLAY TEMP AND TIME REMAINING
+     digitalWrite(3, LOW);
+     digitalWrite(6, LOW);
 	 // OPEN VALVE WHEN FIRST INSERTED
 	 if (timeRemaining == 30){
 		 openValve();
@@ -170,13 +160,17 @@ void loop(){
 	 
 	 // IF USER HAS WASHED HANDS FOR 30 SEC
 	  if(timeRemaining <= -1){ 
-		lcd.clear();
-		lcd.print("ALL DONE");
-          	digitalWrite(3, HIGH); // LIGHT GREEN LED
-          	digitalWrite(6, LOW); // TURN OFF RED LED
-		closeValve(); // STOP HAND WASHING SYSTEM
-          	delay(5000); //DELAY 5 SEC
-          	timeRemaining = 30; // RESTART COUNTDOWN AND SYSTEM
+		  lcd.clear();
+		  lcd.print("ALL DONE");
+          digitalWrite(3, HIGH); // LIGHT GREEN LED
+          digitalWrite(6, LOW); // TURN OFF RED LED
+		  closeValve(); // STOP HAND WASHING SYSTEM
+          delay(2000);
+          timeRemaining = 30;
+          lcd.clear();
+          digitalWrite(3, LOW);
+          delay(5000); 
+          timeRemaining = 30;
 	  }
   }
 

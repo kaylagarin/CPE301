@@ -173,5 +173,10 @@ void loop(){
           timeRemaining = 30;
 	  }
   }
-
 }
+
+// Notes:
+// add to a loop to make sure temperature is sufficient and then start counting down
+// adjust code to make it a while loop 
+// add push button functionality to the loop
+// change digital write to use registers

@@ -32,6 +32,7 @@ volatile unsigned char* motorPIN=pinD;
 int inches = 0;
 int cm = 0;
 int distanceThreshold = 5;
+int temperatureThreshold = 100; // 100 F
 int examplePin = 8;
 int timeRemaining = 30;
 
@@ -112,19 +113,22 @@ if(flag==true){
 	Wait for pushbutton (DONE) --> (*pinD&(1<<2))==(1<<2)) (PUSH BUTTON PRESSED)
 	openValve();
 }
-Else{
-	print(count)
+else{
+	printLCD(calcTemp(), timeRemaining); // need time remaining or just temp
 }
-	while(distance>threshold):
-		print(temperature)
-		if(measureTemperature>=temperature_threshold):
-			print(ok)
+
+while(inches > distanceThreshold){
+	printTemp(calcTemp());
+	if(calcTemp() >= temperatureThreshold){
+		lcd.clear();
+		lcd.print("Temperature sufficient");
 		Delay?
-	Do{
-		print(temperature)
-		print(count)
-		delay(1000)
-		Count--;		
+	}
+}
+Do{
+	lcdPrint
+	delay(1000)
+	Count--;		
 }while((count != 0)&(distance<=threshold));
 	
 if(count == 0){

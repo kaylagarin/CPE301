@@ -35,6 +35,7 @@ int distanceThreshold = 5;
 int temperatureThreshold = 100; // 100 F
 int examplePin = 8;
 int timeRemaining = 30;
+bool flag = true;
 
 long readUltrasonicDistance(){
 // Function: sends a signal through triggerPin and reports the time it takes to get the signal back over echoPin
@@ -101,52 +102,48 @@ void setup(){
   pinMode(A0, INPUT); // TEMP SENSOR SETUP
   lcd.begin(16, 2);// LCD SETUP (COL, ROWS)
   *motorDDR|=(1<<MOTOR_BIT_FWD)|(1<<MOTOR_BIT_REV);
+  *portD|=(1<<2); //enable pullup for pushbutton
 }
 
 void loop(){ 
-/* PSEUDOCODE NOTES:
-  init: 
-	Bool flag=true
-
-Loop:
 if(flag==true){
-	Wait for pushbutton (DONE) --> (*pinD&(1<<2))==(1<<2)) (PUSH BUTTON PRESSED)
+//	Wait for pushbutton (DONE) --> (*pinD&(1<<2))==(1<<2)) (PUSH BUTTON PRESSED)
+	while((*pinD&(1<<2))!=(1<<2)){
+	}
 	openValve();
 }
 else{
 	printLCD(calcTemp(), timeRemaining); // need time remaining or just temp
 }
-
+	
 while(inches > distanceThreshold){
 	printTemp(calcTemp());
 	if(calcTemp() >= temperatureThreshold){
 		lcd.clear();
 		lcd.print("Temperature sufficient");
-		Delay?
+//		Delay?
 	}
 }
 Do{
-	lcdPrint
-	delay(1000)
-	Count--;		
-}while((count != 0)&(distance<=threshold));
+	printLCD(calcTemp(), timeRemaining);
+	delay(1000);
+	timeRemaining--;		
+}while((timeRemaining != 0) && (inches <= distanceThreshold));
 	
-if(count == 0){
-Close faucet
-Green light for 5 s
-flag=true
-green light off
-clear lcd
+if(timeRemaining == 0){
+	closeValve();
+	*portD |= B00001000; // TURN ON GREEN LED
+	flag = true;
+	*portD |= B11110111; // TURN OFF GREEN LED
+	lcd.clear();
 }
-Else if(count >0){
-flag=false;
-Blink Red light
-Clear lcd
-
+else{
+	flag = false;
+	*portD |= B01000000; // TURN ON RED LED
+	lcd.clear();
 }
 
-	Count = 30;
-*/
+timeRemaining = 30;
 }
 
 /* Notes:

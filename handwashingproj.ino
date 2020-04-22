@@ -110,18 +110,21 @@ void loop(){
 	cm = 0.01723 * readUltrasonicDistance();
 	inches = (cm / 2.54);
 
-	if(*pinD&(1<<2))==(1<<2)){
+/*	if(*pinD&(1<<2))==(1<<2)){
 		pushButtonPressed = true;
 	}
-	
+*/	
 	if(pushButtonPressed = false){
 		// system does not start
 	}
-	else{
+	else if (pushButtonPressed = true){
 		openValve();
 		while(inches > distanceThreshold){
+			cm = 0.01723 * readUltrasonicDistance();
+			inches = (cm / 2.54);
 			*portD |= B01000000; // RED LIGHT ON
 			timeRemaining = 30; // RESET TIMER
+          	lcd.clear();
 			printTemp(calcTemp());
 			if(calcTemp() < temperatureThreshold){
 				lcd.setCursor(0,1);
@@ -138,10 +141,12 @@ void loop(){
 		// USER IS WASHING HANDS
 		do{
 			//clear lcd?
+			cm = 0.01723 * readUltrasonicDistance();
+			inches = (cm / 2.54);
 			printLCD(calcTemp(), timeRemaining);
 			delay(1000);
 			timeRemaining--;
-		}while((inches <= distanceThreshold) && (timeRemaining >= 0);
+		}while((inches <= distanceThreshold) && (timeRemaining >= 0));
 	}
 	
 	// WHEN USER HAS WASHED HANDS FOR A SUFFICIENT AMOUNT OF TIME
@@ -149,6 +154,10 @@ void loop(){
 		*portD |= B00001000; // GREEN LED ON
 		lcd.clear();
 		lcd.print("ALL DONE");
+      	delay(1000);
+		lcd.clear();
+		*portD &= B11110111; // GREEN LED OFF
+      	delay(5000); 
 	}
 	timeRemaining = 30; 
 }

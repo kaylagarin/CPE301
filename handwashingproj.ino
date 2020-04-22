@@ -165,9 +165,6 @@ void loop(){
 
 
 /* Notes:
-+ add to a loop to make sure temperature is sufficient and then start counting down
-+ adjust code to make it a while loop 
-+ add push button functionality to the loop
 + DIGITAL WRITE USING REGISTERS: 
     *portD |= B01000000 EQUIV TO digitalWrite(6, HIGH)
     *portD &= B10111111 EQUIV TO digitalWrite(6, LOW)

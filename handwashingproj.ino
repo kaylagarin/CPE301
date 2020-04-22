@@ -35,6 +35,7 @@ int distanceThreshold = 5;
 int temperatureThreshold = 100; // 100 F
 int examplePin = 8;
 int timeRemaining = 30;
+bool pushButtonPressed = false;
 
 long readUltrasonicDistance(){
 // Function: sends a signal through triggerPin and reports the time it takes to get the signal back over echoPin
@@ -101,58 +102,69 @@ void setup(){
   pinMode(A0, INPUT); // TEMP SENSOR SETUP
   lcd.begin(16, 2);// LCD SETUP (COL, ROWS)
   *motorDDR|=(1<<MOTOR_BIT_FWD)|(1<<MOTOR_BIT_REV);
+  *portD|=(1<<2); //enable pullup for pushbutton
 }
 
 void loop(){ 
-/* PSEUDOCODE NOTES:
-  init: 
-	Bool flag=true
+	// MEASURE DISTANCE SENSOR IN INCHES
+	cm = 0.01723 * readUltrasonicDistance();
+	inches = (cm / 2.54);
 
-Loop:
-if(flag==true){
-	Wait for pushbutton (DONE) --> (*pinD&(1<<2))==(1<<2)) (PUSH BUTTON PRESSED)
-	openValve();
-}
-else{
-	printLCD(calcTemp(), timeRemaining); // need time remaining or just temp
-}
-
-while(inches > distanceThreshold){
-	printTemp(calcTemp());
-	if(calcTemp() >= temperatureThreshold){
-		lcd.clear();
-		lcd.print("Temperature sufficient");
-		Delay?
+/*	if(*pinD&(1<<2))==(1<<2)){
+		pushButtonPressed = true;
 	}
-}
-Do{
-	lcdPrint
-	delay(1000)
-	Count--;		
-}while((count != 0)&(distance<=threshold));
+*/	
+	if(pushButtonPressed = false){
+		// system does not start
+	}
+	else if (pushButtonPressed = true){
+		openValve();
+		while(inches > distanceThreshold){
+			cm = 0.01723 * readUltrasonicDistance();
+			inches = (cm / 2.54);
+			*portD |= B01000000; // RED LIGHT ON
+			timeRemaining = 30; // RESET TIMER
+          	lcd.clear();
+			printTemp(calcTemp());
+			if(calcTemp() < temperatureThreshold){
+				lcd.setCursor(0,1);
+				lcd.print("INCREASE TEMP");
+				delay(2000); // delay so user can read message
+			}
+			lcd.clear();
+			printTemp(calcTemp());
+			lcd.setCursor(0,1);
+			lcd.print("INSERT HANDS");
+			*portD &= B10111111; // RED LIGHT OFF
+		}
+		
+		// USER IS WASHING HANDS
+		do{
+			//clear lcd?
+			cm = 0.01723 * readUltrasonicDistance();
+			inches = (cm / 2.54);
+			printLCD(calcTemp(), timeRemaining);
+			delay(1000);
+			timeRemaining--;
+		}while((inches <= distanceThreshold) && (timeRemaining >= 0));
+	}
 	
-if(count == 0){
-Close faucet
-Green light for 5 s
-flag=true
-green light off
-clear lcd
+	// WHEN USER HAS WASHED HANDS FOR A SUFFICIENT AMOUNT OF TIME
+	if(timeRemaining <= 0){
+		*portD |= B00001000; // GREEN LED ON
+		lcd.clear();
+		lcd.print("ALL DONE");
+      	delay(1000);
+		lcd.clear();
+		*portD &= B11110111; // GREEN LED OFF
+      	delay(5000); 
+	}
+	timeRemaining = 30; 
 }
-Else if(count >0){
-flag=false;
-Blink Red light
-Clear lcd
+		
 
-}
-
-	Count = 30;
-*/
-}
 
 /* Notes:
-+ add to a loop to make sure temperature is sufficient and then start counting down
-+ adjust code to make it a while loop 
-+ add push button functionality to the loop
 + DIGITAL WRITE USING REGISTERS: 
     *portD |= B01000000 EQUIV TO digitalWrite(6, HIGH)
     *portD &= B10111111 EQUIV TO digitalWrite(6, LOW)

@@ -3,6 +3,8 @@
 
 #include <LiquidCrystal.h>
 
+#define WASH_TIME 30
+
 //DEFINE MACROS FOR LCD PINS
 #define LCD_RS 13
 #define LCD_E 12
@@ -33,9 +35,8 @@ int inches = 0;
 int cm = 0;
 int distanceThreshold = 5;
 int temperatureThreshold = 100; // 100 F
-int examplePin = 8;
-int timeRemaining = 30;
-bool pushButtonPressed = false;
+int timeRemaining = WASH_TIME;
+bool normalOperation = true;
 
 long readUltrasonicDistance(){
 // Function: sends a signal through triggerPin and reports the time it takes to get the signal back over echoPin
@@ -61,6 +62,7 @@ void printTemp(int displayTemp){
  lcd.setCursor(0 ,0);
  lcd.print("Water Temp:");
  lcd.print(displayTemp);
+ lcd.print("F");
 }
 
 float calcTemp(){
@@ -93,6 +95,15 @@ void closeValve(){
   *motorPort&=~(1<<MOTOR_BIT_REV); //reset reverse motor bit to 0
 }
 
+//LED Blink
+void LED_Blink(int seconds_blink){
+  for( ; seconds_blink>0; seconds_blink--){
+  	*portD |= B01000000; // RED LIGHT ON
+	delay(500);
+  	*portD &= B10111111; // RED LIGHT OFF
+  	delay(500);
+  }
+}
 
 /*********************** MAIN CODE **********************/
 void setup(){
@@ -110,63 +121,65 @@ void loop(){
 	cm = 0.01723 * readUltrasonicDistance();
 	inches = (cm / 2.54);
 
-/*	if(*pinD&(1<<2))==(1<<2)){
-		pushButtonPressed = true;
+	if(normalOperation == true){
+		// wait for pushbutton, then turn on valve
+      while((*pinD&(1<<2))==(1<<2));
+      openValve();
 	}
-*/	
-	if(pushButtonPressed = false){
-		// system does not start
-	}
-	else if (pushButtonPressed = true){
-		openValve();
-		while(inches > distanceThreshold){
-			cm = 0.01723 * readUltrasonicDistance();
-			inches = (cm / 2.54);
-			*portD |= B01000000; // RED LIGHT ON
-			timeRemaining = 30; // RESET TIMER
-          	lcd.clear();
-			printTemp(calcTemp());
-			if(calcTemp() < temperatureThreshold){
-				lcd.setCursor(0,1);
-				lcd.print("INCREASE TEMP");
-				delay(2000); // delay so user can read message
-			}
-			lcd.clear();
-			printTemp(calcTemp());
-			lcd.setCursor(0,1);
-			lcd.print("INSERT HANDS");
-			*portD &= B10111111; // RED LIGHT OFF
-		}
-		
-		// USER IS WASHING HANDS
-		do{
-			//clear lcd?
-			cm = 0.01723 * readUltrasonicDistance();
-			inches = (cm / 2.54);
-			printLCD(calcTemp(), timeRemaining);
-			delay(1000);
-			timeRemaining--;
-		}while((inches <= distanceThreshold) && (timeRemaining >= 0));
-	}
+
+    while(inches > distanceThreshold){
+        timeRemaining = WASH_TIME; //RESET TIMER
+        lcd.clear();
+        printTemp(calcTemp());
+        if(calcTemp() < temperatureThreshold){
+            lcd.setCursor(0,1);
+            lcd.print("INCREASE TEMP");
+            delay(500); // delay so user can read message
+        }
+        lcd.clear();
+        printTemp(calcTemp());
+      if(calcTemp() >= temperatureThreshold){
+          	lcd.setCursor(0,1);
+          	lcd.print("INSERT HANDS");
+        	delay(500);
+      }
+      	cm = 0.01723 * readUltrasonicDistance();
+		inches = (cm / 2.54);
+    }
+    
+    // USER IS WASHING HANDS
+    do{
+        printLCD(calcTemp(), timeRemaining);
+        delay(1000);
+        timeRemaining--;
+        cm = 0.01723 * readUltrasonicDistance();
+        inches = (cm / 2.54);      
+    }while((inches <= distanceThreshold) && (timeRemaining > 0));
+  	
+    if(inches>distanceThreshold){
+      normalOperation=false;
+      lcd.clear();
+      LED_Blink(2);
+    }
 	
 	// WHEN USER HAS WASHED HANDS FOR A SUFFICIENT AMOUNT OF TIME
-	if(timeRemaining <= 0){
+	else if(timeRemaining <= 0){
+        closeValve();
 		*portD |= B00001000; // GREEN LED ON
 		lcd.clear();
+      	lcd.setCursor(0,0);
 		lcd.print("ALL DONE");
-      	delay(1000);
+      	delay(5000);
 		lcd.clear();
 		*portD &= B11110111; // GREEN LED OFF
-      	delay(5000); 
+        normalOperation=true;
 	}
-	timeRemaining = 30; 
+    else{
+        normalOperation=false;
+      	lcd.clear();
+        LED_Blink(2);//blink red light
+        
+    }
+
+	timeRemaining = WASH_TIME; 
 }
-		
-
-
-/* Notes:
-+ DIGITAL WRITE USING REGISTERS: 
-    *portD |= B01000000 EQUIV TO digitalWrite(6, HIGH)
-    *portD &= B10111111 EQUIV TO digitalWrite(6, LOW)
-    
-*/
